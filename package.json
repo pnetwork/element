@@ -1,5 +1,5 @@
 {
-  "name": "element-ui",
+  "name": "@pentium/element-ui",
   "version": "2.13.2",
   "description": "A Component Library for Vue.js.",
   "main": "lib/element-ui.common.js",
@@ -144,5 +144,8 @@
     "webpack-cli": "^3.0.8",
     "webpack-dev-server": "^3.1.11",
     "webpack-node-externals": "^1.7.2"
+  },
+  "publishConfig": {
+    "registry": "https://package.pentium.network/repository/npm-hosted/"
   }
 }
