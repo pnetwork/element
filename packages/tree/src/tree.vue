@@ -9,16 +9,27 @@
     }"
     role="tree"
   >
-    <el-tree-node
-      v-for="child in root.childNodes"
-      :node="child"
-      :props="props"
-      :render-after-expand="renderAfterExpand"
-      :show-checkbox="showCheckbox"
-      :key="getNodeKey(child)"
-      :render-content="renderContent"
-      @node-expand="handleNodeExpand">
-    </el-tree-node>
+    <virtual-list
+      v-if="virtualList"
+      style="height: 100%; overflow: auto;"
+      data-key="id"
+      v-bind="virtualListOptions"
+      :data-sources="root.childNodes"
+      :data-component="treeNodeAdpterComponent"
+      :extra-props="{ props, renderAfterExpand, showCheckbox, renderContent, nodeExpand: handleNodeExpand }"
+    />
+    <template v-else>
+      <el-tree-node
+        v-for="child in root.childNodes"
+        :node="child"
+        :props="props"
+        :render-after-expand="renderAfterExpand"
+        :show-checkbox="showCheckbox"
+        :key="getNodeKey(child)"
+        :render-content="renderContent"
+        @node-expand="handleNodeExpand">
+      </el-tree-node>
+    </template>
     <div class="el-tree__empty-block" v-if="isEmpty">
       <span class="el-tree__empty-text">{{ emptyText }}</span>
     </div>
@@ -31,6 +42,8 @@
 </template>
 
 <script>
+  import Vue from 'vue';
+  import VirtualList from 'vue-virtual-scroll-list';
   import TreeStore from './model/tree-store';
   import { getNodeKey, findNearestComponent } from './model/util';
   import ElTreeNode from './tree-node.vue';
@@ -44,11 +57,37 @@
     mixins: [emitter],
 
     components: {
-      ElTreeNode
+      ElTreeNode,
+      VirtualList
     },
 
     data() {
+      const _this = this;
+
       return {
+        treeNodeAdpterComponent: Vue.extend({
+          name: 'ElTreeNodeVitualListAdapter',
+          props: ['source', 'props', 'renderAfterExpand', 'showCheckbox', 'nodeExpand'],
+          data() {
+            return {
+              tree: _this
+            };
+          },
+          render(h) {
+            return h(ElTreeNode, {
+              props: {
+                node: this.source,
+                props: this.props,
+                renderAfterExpand: this.renderAfterExpand,
+                showCheckbox: this.showCheckbox,
+                renderContent: this.renderContent
+              },
+              on: {
+                nodeExpand: this.nodeExpand
+              }
+            });
+          }
+        }),
         store: null,
         root: null,
         currentNode: null,
@@ -128,7 +167,9 @@
         type: Number,
         default: 18
       },
-      iconClass: String
+      iconClass: String,
+      virtualList: Boolean,
+      virtualListOptions: Object
     },
 
     computed: {
